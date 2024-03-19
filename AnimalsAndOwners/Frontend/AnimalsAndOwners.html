@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owners and Animals</title>
+    <link href="bootstrap-5.2.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Owners and Animals</h1>
+        <div id="accordion" class="accordion">
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="bootstrap-5.2.3/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            fetchOwners();
+        });
+
+        function fetchOwners() {
+            fetch('http://localhost:5020/AnimalsAndOwners/owners')
+                .then(response => response.json())
+                .then(data => {
+                    const accordion = $('#accordion');
+                    data.forEach(owner => {
+                        const card = $('<div>').addClass('card');
+
+                        const cardHeader = $('<div>').addClass('card-header').attr('id', `heading${owner.id}`);
+                        cardHeader.html(`
+                <h5 class="mb-0">
+                  <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${owner.id}" aria-expanded="true" aria-controls="collapse${owner.id}">
+                    ${owner.name}
+                  </button>
+                </h5>
+              `);
+
+                        const collapse = $('<div>').attr('id', `collapse${owner.id}`).addClass('collapse show').attr('aria-labelledby', `heading${owner.id}`).attr('data-bs-parent', '#accordion');
+
+                        const cardBody = $('<div>').addClass('card-body');
+                        cardBody.html(`<ul id="animals-${owner.id}"></ul>`);
+
+                        collapse.append(cardBody);
+                        card.append(cardHeader, collapse);
+                        accordion.append(card);
+                        
+                        fetchAnimals(owner.id);
+                    });
+                })
+                .catch(error => console.error('Error fetching owners:', error));
+        }
+
+        function fetchAnimals(ownerId) {
+            fetch(`http://localhost:5020/AnimalsAndOwners/animalsbyowner/${ownerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const animalsList = $(`#animals-${ownerId}`);
+                    animalsList.html('');
+                    data.forEach(animal => {
+                        animalsList.append(`<li>${animal.name} - ${animal.species} - ${animal.age}</li>`);
+                    });
+                })
+                .catch(error => console.error('Error fetching animals:', error));
+        }
+    </script>
+</body>
+</html>
